@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Tarefas 8-bit</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Press Start 2P', cursive;
+        }
+        
+        body {
+            background-color: #0a0e21;
+            color: #e0e0e0;
+            padding: 20px;
+            background-image: radial-gradient(circle, #1a1f3b 0%, #0a0e21 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #1a2035;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            border: 2px solid rebeccapurple;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: rebeccapurple;
+            text-shadow: 3px 3px 0 #000;
+            font-size: 28px;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 25px;
+            gap: 10px;
+        }
+        
+        #taskInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rebeccapurple;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #0f1328;
+            color: #e0e0e0;
+        }
+        
+        #taskInput:focus {
+            outline: none;
+            border-color: #ff3864;
+            box-shadow: 0 0 5px rgba(255, 56, 100, 0.8);
+        }
+        
+        button {
+            background-color: #4e57ef;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            border: 2px solid #000;
+            box-shadow: 3px 3px 0 #000;
+        }
+        
+        button:hover {
+            background-color: #3a42d0;
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 #000;
+        }
+        
+        #addButton {
+            background-color: #2ecc71;
+        }
+        
+        #addButton:hover {
+            background-color: #27ae60;
+        }
+        
+        #updateButton {
+            background-color: #f39c12;
+            display: none;
+        }
+        
+        #updateButton:hover {
+            background-color: #d68910;
+        }
+        
+        #cancelButton {
+            background-color: #ff3864;
+            display: none;
+        }
+        
+        #cancelButton:hover {
+            background-color: #e82a56;
+        }
+        
+        .tasks-container {
+            margin-top: 20px;
+        }
+        
+        .task-item {
+            background-color: #1a2035;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            border: 2px solid rebeccapurple;
+            animation: taskAppear 0.3s ease-out;
+        }
+        
+        @keyframes taskAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .task-text {
+            flex: 1;
+            word-break: break-word;
+            padding-right: 15px;
+            font-size: 14px;
+            color: #fff;
+        }
+        
+        .task-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .edit-btn {
+            background-color: #f39c12;
+            color: #000;
+            padding: 8px 12px;
+            font-size: 10px;
+        }
+        
+        .edit-btn:hover {
+            background-color: #d68910;
+        }
+        
+        .delete-btn {
+            background-color: #ff3864;
+            padding: 8px 12px;
+            font-size: 10px;
+        }
+        
+        .delete-btn:hover {
+            background-color: #e82a56;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #a0a0c0;
+            padding: 20px;
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease-out;
+            z-index: 1000;
+            font-size: 12px;
+            border: 2px solid #000;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .notification.error {
+            background-color: #ff3864;
+        }
+        
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .task-buttons {
+                margin-top: 10px;
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerenciador ed tarefa</h1>
+        
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="Digite uma nova tarefa...">
+            <div>
+                <button id="addButton">Adicionar</button>
+                <button id="updateButton">Atualizar</button>
+                <button id="cancelButton">Cancelar</button>
+            </div>
+        </div>
+        
+        <div class="tasks-container" id="tasksList">
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let tasks = [];
+        let currentEditIndex = -1;
+
+        const taskInput = document.getElementById('taskInput');
+        const addButton = document.getElementById('addButton');
+        const updateButton = document.getElementById('updateButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const tasksList = document.getElementById('tasksList');
+        const notification = document.getElementById('notification');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarLocalStorage();
+            listarItens();
+            
+            addButton.addEventListener('click', adicionarItem);
+            updateButton.addEventListener('click', atualizarItem);
+            cancelButton.addEventListener('click', cancelarEdicao);
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    if (currentEditIndex === -1) {
+                        adicionarItem();
+                    } else {
+                        atualizarItem();
+                    }
+                }
+            });
+        });
+
+        function adicionarItem() {
+            const texto = taskInput.value.trim();
+            
+            if (texto === '') {
+                mostrarNotificacao('Por favor, digite uma tarefa!', 'error');
+                return;
+            }
+            
+            if (tasks.includes(texto)) {
+                mostrarNotificacao('Esta tarefa já existe na lista!', 'error');
+                return;
+            }
+            
+            tasks.push(texto);
+            salvarLocalStorage();
+            listarItens();
+            taskInput.value = '';
+            
+            mostrarNotificacao('Tarefa adicionada com sucesso! ✅');
+        }
+
+        function listarItens() {
+            tasksList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = '<div class="empty-state">Nenhuma tarefa cadastrada. Adicione uma nova tarefa!</div>';
+                return;
+            }
+            
+            tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                taskElement.innerHTML = `
+                    <div class="task-text">${task}</div>
+                    <div class="task-buttons">
+                        <button class="edit-btn" onclick="iniciarEdicao(${index})">Editar</button>
+                        <button class="delete-btn" onclick="removerItem(${index})">Excluir</button>
+                    </div>
+                `;
+                tasksList.appendChild(taskElement);
+            });
+        }
+
+        function removerItem(index) {
+            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                tasks.splice(index, 1);
+                salvarLocalStorage();
+                listarItens();
+                mostrarNotificacao('Tarefa excluída com sucesso!');
+            }
+        }
+
+        function iniciarEdicao(index) {
+            currentEditIndex = index;
+            taskInput.value = tasks[index];
+            taskInput.focus();
+            
+            addButton.style.display = 'none';
+            updateButton.style.display = 'block';
+            cancelButton.style.display = 'block';
+        }
+
+        function atualizarItem() {
+            const texto = taskInput.value.trim();
+            
+            if (texto === '') {
+                mostrarNotificacao('Por favor, digite uma tarefa!', 'error');
+                return;
+            }
+            
+            if (tasks.includes(texto) && tasks[currentEditIndex] !== texto) {
+                mostrarNotificacao('Esta tarefa já existe na lista!', 'error');
+                return;
+            }
+            
+            tasks[currentEditIndex] = texto;
+            salvarLocalStorage();
+            listarItens();
+            cancelarEdicao();
+            
+            mostrarNotificacao('Tarefa atualizada com sucesso! ✅');
+        }
+
+        function cancelarEdicao() {
+            currentEditIndex = -1;
+            taskInput.value = '';
+            
+            addButton.style.display = 'block';
+            updateButton.style.display = 'none';
+            cancelButton.style.display = 'none';
+        }
+
+        function salvarLocalStorage() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function carregarLocalStorage() {
+            const storedTasks = localStorage.getItem('tasks');
+            if (storedTasks) {
+                tasks = JSON.parse(storedTasks);
+            }
+        }
+
+        function mostrarNotificacao(mensagem, tipo = 'success') {
+            notification.textContent = mensagem;
+            notification.style.backgroundColor = tipo === 'success' ? '#2ecc71' : '#ff3864';
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
